@@ -1,0 +1,3 @@
+[submodule "threepp"]
+	path = threepp
+	url = git@github.com:markaren/threepp.git
