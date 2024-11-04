@@ -55,7 +55,9 @@ int main() {
 
     std::vector<PipePair> pipes;
     float pipe_speed = -0.01f; // Hastigheten til rørene som beveger seg mot venstre
-    float pipe_gap = 4.0f;     // Avstand mellom topp- og bunnrør
+
+    float pipe_start_x = 2.5f;     // Startposisjon til rørene utenfor høyre kant
+    float pipe_remove_x = -2.5f;   // Fjern rørene når de går utenfor venstre kant
 
     auto create_pipe_pair = [&]() {
         auto pipe_geometry = PlaneGeometry::create(0.8f, 3.0f);
@@ -70,11 +72,14 @@ int main() {
         // Tilfeldig posisjon for gapet
         float gap_y = ((rand() % 100) / 100.0f) * 1.0f - 0.5f;  // -0.5 til +0.5
 
-        // Sett posisjon for topp- og bunnrør
-        top_pipe->position.set(2.0f, gap_y + pipe_gap / 2.0f, 0);
-        bottom_pipe->position.set(2.0f, gap_y - pipe_gap / 2.0f, 0);
+        // Tilfeldig gap mellom topp- og bunnrør
+        float pipe_gap = 3.5f + ((rand() % 150) / 400.0f);  // Tilfeldig gap mellom 3.0 og 5.0
 
-        // Roter topp-pipen 180 grader (π radianer)
+        // Sett startposisjon for topp- og bunnrør til høyre for skjermen
+        top_pipe->position.set(pipe_start_x, gap_y + pipe_gap / 2.0f, 0);
+        bottom_pipe->position.set(pipe_start_x, gap_y - pipe_gap / 2.0f, 0);
+
+        // Roter topp-pipen 180 grader (pi radianer)
         top_pipe->rotation.z = math::PI;
 
         // Legg rørene til i scenen
@@ -146,7 +151,7 @@ int main() {
 
             // Roter fuglen gradvis mot maksimal nedovervinkel
             if (rotation_angle > max_rotation_angle) {
-                rotation_angle -= 90.0f * (1.0f / 60.0f);  // Ca. 1 sekund til full rotasjon nedover
+                rotation_angle -= 90.0f * (1.0f / 100.0f);  // Ca. 1 sekund til full rotasjon nedover
                 if (rotation_angle < max_rotation_angle) {
                     rotation_angle = max_rotation_angle;
                 }
@@ -171,12 +176,13 @@ int main() {
             }
 
             // Fjern rør som har gått ut av skjermen og generer nye
-            if (!pipes.empty() && pipes.front().top_pipe->position.x < -2.0f) {
+            if (!pipes.empty() && pipes.front().top_pipe->position.x < pipe_remove_x) {
                 scene.remove(*pipes.front().top_pipe);
                 scene.remove(*pipes.front().bottom_pipe);
                 pipes.erase(pipes.begin());
                 create_pipe_pair();
             }
+
         }
 
         renderer.render(scene, camera);
