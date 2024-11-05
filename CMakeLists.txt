@@ -1,12 +1,16 @@
-cmake_minimum_required(VERSION 3.29)
+# CMakeLists.txt
+
+cmake_minimum_required(VERSION 3.10)
 project(Flappy_Bird)
 
-set(CMAKE_CXX_STANDARD 20)
-
+# Legg til threepp som en ekstern mappe hvis den ligger lokalt
 add_subdirectory(threepp)
 
+# Legg til inkluderingsmapper
 include_directories(threepp/include)
 
+# Legg til hovedprogrammet
 add_executable(Flappy_Bird main.cpp)
 
-target_link_libraries(Flappy_Bird threepp)
+# Link threepp-biblioteket til ditt prosjekt
+target_link_libraries(Flappy_Bird PRIVATE threepp)
