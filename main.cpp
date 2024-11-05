@@ -38,6 +38,7 @@ int main() {
     TextureLoader texture_loader;
     auto bird_texture = texture_loader.load("C:/dev/Flappy Bird/Textures/Flappy Bird.png");
     auto pipe_texture = texture_loader.load("C:/dev/Flappy Bird/Textures/Pipe.png");
+    auto end_texture = texture_loader.load("C:/dev/Flappy Bird/Textures/Game Over.png");
 
     auto bird_geometry = PlaneGeometry::create(0.8, 0.8);
     auto bird_material = MeshBasicMaterial::create();
@@ -45,6 +46,12 @@ int main() {
     bird_material->transparent = true;
     auto bird = Mesh::create(bird_geometry, bird_material);
     scene.add(bird);
+
+    auto end_geometry = PlaneGeometry::create(2, 2);
+    auto end_material = MeshBasicMaterial::create();
+    end_material->map = end_texture;
+    end_material->transparent = true;
+    auto end = Mesh::create(end_geometry, end_material);
 
     struct PipePair {
         std::shared_ptr<Mesh> top_pipe;
@@ -103,7 +110,9 @@ int main() {
     canvas.addKeyListener(key_listener);
 
     auto reset_game = [&]() {
+        scene.add(*end);
         std::this_thread::sleep_for(std::chrono::seconds(1));  // Vent ett sekund før tilbakestilling
+        scene.remove(*end);
         game_started = false;
         input_disabled = false;
         velocity = 0.0f;
@@ -169,6 +178,7 @@ int main() {
                     if (bird->position.y > pipe_pair.top_pipe->position.y - 1.5f ||
                         bird->position.y < pipe_pair.bottom_pipe->position.y + 1.5f) {
                         input_disabled = true;
+                        scene.add(end);
                         reset_game();
                         return;
                     }
@@ -183,10 +193,14 @@ int main() {
                 create_pipe_pair();
             }
 
+
         }
+
 
         renderer.render(scene, camera);
     });
+
+
 
     return 0;
 }
