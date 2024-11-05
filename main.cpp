@@ -3,16 +3,15 @@
 #include <string>
 
 using namespace std;
-
 using namespace threepp;  // Gjør at vi kan bruke funksjonene i threepp direkte
 
-string bird_open =  "C:/dev/Flappy Bird/Textures/Colibri open.png";
+// Definer teksturstiene
+string bird_open = "C:/dev/Flappy Bird/Textures/Colibri open.png";
 string bird_closed = "C:/dev/Flappy Bird/Textures/Colibri closed.png";
-
 string bird_texture = bird_open;
 
 void update_texture(int timer) {
-    if (timer % 2 = 0) {
+    if (timer % 2 == 0) {  // Riktig sammenligningsoperator
         bird_texture = bird_open;
     } else {
         bird_texture = bird_closed;
@@ -41,6 +40,8 @@ struct colibri_key_listener : KeyListener {
             case Key::D:
                 move_right = true;
                 break;
+            default:
+                break;
         }
     }
 
@@ -59,18 +60,13 @@ struct colibri_key_listener : KeyListener {
             case Key::D:
                 move_right = false;
                 break;
+            default:
+                break;
         }
     }
 };
 
 int main() {
-    int timer = 0;
-
-    while (true) {
-        update_texture(timer);
-        timer++;
-
-    }
     // Opprett et vindu
     Canvas canvas("Colibri Flight");
     GLRenderer renderer(canvas.size());
@@ -83,19 +79,20 @@ int main() {
     Scene scene;
     scene.background = Color::skyblue;
 
+    // Legg til lytt til lyd
     AudioListener listener;
     PositionalAudio audio(listener, "C:/dev/Flappy Bird/Audio/8-Bit Odyssey.mp3");
     audio.setLooping(true);
     audio.play();
 
-    // Last inn kolibri-bildet (Flappy Bird.png)
+    // Last inn den første teksturen
     TextureLoader texture_loader;
-    auto bird_texture = texture_loader.load("C:/dev/Flappy Bird/Textures/Flappy Bird.png");
+    auto current_texture = texture_loader.load(bird_texture);
 
     // Opprett kolibrien som et flatt plan med tekstur
     auto bird_geometry = PlaneGeometry::create(2.0f, 2.0f);
     auto bird_material = MeshBasicMaterial::create();
-    bird_material->map = bird_texture;
+    bird_material->map = current_texture;
     bird_material->transparent = true;
     auto bird = Mesh::create(bird_geometry, bird_material);
     bird->position.set(0, 0, 0);  // Start posisjon midt på skjermen
@@ -103,14 +100,28 @@ int main() {
 
     // Bevegelsesvariabler for kolibrien
     bool move_up = false, move_down = false, move_left = false, move_right = false;
-    float speed = 0.05f; // Hastigheten til kolibrien
+    float speed = 0.05f;  // Hastigheten til kolibrien
 
     // Tastelytter for å kontrollere kolibrien med WASD
     colibri_key_listener key_listener(move_up, move_down, move_left, move_right);
     canvas.addKeyListener(key_listener);
 
+    int timer = 0;
+
     // Animasjonsløkke som kjører kontinuerlig
     canvas.animate([&]() {
+        // Oppdater teksturen
+        update_texture(timer);
+        timer++;
+
+        // Hvis bird_texture er endret, last inn ny tekstur
+        static string last_texture = bird_texture;
+        if (bird_texture != last_texture) {
+            current_texture = texture_loader.load(bird_texture);
+            bird_material->map = current_texture;
+            last_texture = bird_texture;  // Oppdater siste tekstursti
+        }
+
         // Oppdater kolibriens posisjon basert på tastetrykk
         if (move_up) bird->position.y += speed;
         if (move_down) bird->position.y -= speed;
