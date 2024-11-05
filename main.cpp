@@ -1,8 +1,23 @@
 #include "threepp/threepp.hpp"  // Dette inkluderer threepp-biblioteket
 #include "threepp/audio/Audio.hpp"
+#include <string>
 
+using namespace std;
 
 using namespace threepp;  // Gjør at vi kan bruke funksjonene i threepp direkte
+
+string bird_open =  "C:/dev/Flappy Bird/Textures/Colibri open.png";
+string bird_closed = "C:/dev/Flappy Bird/Textures/Colibri closed.png";
+
+string bird_texture = bird_open;
+
+void update_texture(int timer) {
+    if (timer % 2 = 0) {
+        bird_texture = bird_open;
+    } else {
+        bird_texture = bird_closed;
+    }
+}
 
 // Klasse for å håndtere tastetrykk (WASD for å styre kolibrien)
 struct colibri_key_listener : KeyListener {
@@ -49,6 +64,13 @@ struct colibri_key_listener : KeyListener {
 };
 
 int main() {
+    int timer = 0;
+
+    while (true) {
+        update_texture(timer);
+        timer++;
+
+    }
     // Opprett et vindu
     Canvas canvas("Colibri Flight");
     GLRenderer renderer(canvas.size());
