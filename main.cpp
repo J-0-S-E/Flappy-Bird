@@ -11,7 +11,7 @@ string bird_closed = "C:/dev/Flappy Bird/Textures/Colibri closed.png";
 string bird_texture = bird_open;
 
 void update_texture(int timer) {
-    if (timer % 2 == 0) {  // Riktig sammenligningsoperator
+    if (timer % 3 == 0) {  // Riktig sammenligningsoperator
         bird_texture = bird_open;
     } else {
         bird_texture = bird_closed;
@@ -85,22 +85,45 @@ int main() {
     audio.setLooping(true);
     audio.play();
 
-    // Last inn den første teksturen
+    // Last inn teksturene
     TextureLoader texture_loader;
     auto current_texture = texture_loader.load(bird_texture);
+    auto upper_pipe_texture = texture_loader.load("C:/dev/Flappy Bird/Textures/Upper_pipe.png");
+    auto lower_pipe_texture = texture_loader.load("C/dev/Flappy Bird/Textures/Lower_pipe.png");
 
-    // Opprett kolibrien som et flatt plan med tekstur
+    // Opprett kolibrien
     auto bird_geometry = PlaneGeometry::create(2.0f, 2.0f);
     auto bird_material = MeshBasicMaterial::create();
+
+    //Opprett pipene
+    auto upper_pipe_geometry = PlaneGeometry::create(2.0f, 4.0f);
+    auto upper_pipe_material = MeshBasicMaterial::create();
+    auto lower_pipe_geometry = PlaneGeometry::create(2.0f,4.0f);
+    auto lower_pipe_material = MeshBasicMaterial::create();
+
     bird_material->map = current_texture;
+    upper_pipe_material->map = upper_pipe_texture;
+    lower_pipe_material->map = lower_pipe_texture;
+
     bird_material->transparent = true;
+    upper_pipe_material->transparent = true;
+    lower_pipe_material->transparent = true;
+
+    auto upper_pipe = Mesh::create(upper_pipe_geometry, upper_pipe_material);
+    auto lower_pipe = Mesh::create(lower_pipe_geometry, lower_pipe_material);
     auto bird = Mesh::create(bird_geometry, bird_material);
+
     bird->position.set(0, 0, 0);  // Start posisjon midt på skjermen
+    upper_pipe->position.set(1.0f, 0, 0);
+    lower_pipe->position.set(1.0f, 0, 0);
+
     scene.add(bird);
+    scene.add(upper_pipe);
+    scene.add(lower_pipe);
 
     // Bevegelsesvariabler for kolibrien
     bool move_up = false, move_down = false, move_left = false, move_right = false;
-    float speed = 0.05f;  // Hastigheten til kolibrien
+    float speed = 0.1f;  // Hastigheten til kolibrien
 
     // Tastelytter for å kontrollere kolibrien med WASD
     colibri_key_listener key_listener(move_up, move_down, move_left, move_right);
