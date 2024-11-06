@@ -89,7 +89,7 @@ int main() {
     TextureLoader texture_loader;
     auto current_texture = texture_loader.load(bird_texture);
     auto upper_pipe_texture = texture_loader.load("C:/dev/Flappy Bird/Textures/Upper_pipe.png");
-    auto lower_pipe_texture = texture_loader.load("C/dev/Flappy Bird/Textures/Lower_pipe.png");
+    auto lower_pipe_texture = texture_loader.load("C:/dev/Flappy Bird/Textures/Lower_pipe.png");
 
     // Opprett kolibrien
     auto bird_geometry = PlaneGeometry::create(2.0f, 2.0f);
@@ -114,8 +114,8 @@ int main() {
     auto bird = Mesh::create(bird_geometry, bird_material);
 
     bird->position.set(0, 0, 0);  // Start posisjon midt på skjermen
-    upper_pipe->position.set(1.0f, 0, 0);
-    lower_pipe->position.set(1.0f, 0, 0);
+    upper_pipe->position.set(2.0f, 3.f, 0);
+    lower_pipe->position.set(2.0f, -3.f, 0);
 
     scene.add(bird);
     scene.add(upper_pipe);
