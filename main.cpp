@@ -1,21 +1,24 @@
 #include "threepp/threepp.hpp"  // threepp library
 #include "threepp/audio/Audio.hpp"
 #include <string>
+#include <random>
+#include <cmath>
+#include <memory>
 
 using namespace std;
 using namespace threepp;
 
-// Texture paths
+// Texture paths for the bird's animation
 const string bird_open = "C:/dev/Flappy Bird/Textures/Colibri open.png";
 const string bird_closed = "C:/dev/Flappy Bird/Textures/Colibri closed.png";
 string bird_texture = bird_open;
 
-// Update texture based on timer
+// Function to alternate bird texture based on timer
 void update_texture(int timer) {
     bird_texture = (timer % 3 == 0) ? bird_open : bird_closed;
 }
 
-// Key Listener for bird movement (WASD controls)
+// Key listener for bird movement (WASD controls)
 struct ColibriKeyListener : KeyListener {
     bool &move_up, &move_down, &move_left, &move_right;
 
@@ -43,7 +46,25 @@ struct ColibriKeyListener : KeyListener {
     }
 };
 
+// Function to randomly select a flower texture path
+string get_random_flower_texture() {
+    vector<string> flower_textures = {
+        "C:/dev/Flappy Bird/Textures/Flower1.png",
+        "C:/dev/Flappy Bird/Textures/Flower2.png",
+        "C:/dev/Flappy Bird/Textures/Flower3.png"
+    };
+
+    static random_device rd;  // Seed
+    static mt19937 gen(rd()); // Random number generator
+    uniform_int_distribution<> dis(0, flower_textures.size() - 1);
+
+    return flower_textures[dis(gen)];
+}
+
 int main() {
+
+    int timer = 0;
+
     // Create window and renderer
     Canvas canvas("Colibri Flight");
     GLRenderer renderer(canvas.size());
@@ -65,55 +86,75 @@ int main() {
 
     // Load textures
     TextureLoader texture_loader;
-    auto current_texture = texture_loader.load(bird_texture);
-    auto upper_pipe_texture = texture_loader.load("C:/dev/Flappy Bird/Textures/Upper_pipe.png");
-    auto lower_pipe_texture = texture_loader.load("C:/dev/Flappy Bird/Textures/Lower_pipe.png");
+    auto current_texture = texture_loader.load(bird_texture);  // Bird initial texture
 
-    // Create bird
+    // Bird setup
     auto bird_geometry = PlaneGeometry::create(2.0f, 2.0f);
     auto bird_material = MeshBasicMaterial::create();
     bird_material->map = current_texture;
     bird_material->transparent = true;
-
-    // Create pipes
-    auto pipe_geometry = PlaneGeometry::create(2.0f, 4.0f);
-    auto upper_pipe_material = MeshBasicMaterial::create();
-    auto lower_pipe_material = MeshBasicMaterial::create();
-    upper_pipe_material->map = upper_pipe_texture;
-    lower_pipe_material->map = lower_pipe_texture;
-    upper_pipe_material->transparent = true;
-    lower_pipe_material->transparent = true;
-
     auto bird = Mesh::create(bird_geometry, bird_material);
-    auto upper_pipe = Mesh::create(pipe_geometry, upper_pipe_material);
-    auto lower_pipe = Mesh::create(pipe_geometry, lower_pipe_material);
+    bird->position.set(0, 0, 0);
+
+    // Select random textures for the top and bottom flowers
+    string random_flower_texture_top = get_random_flower_texture();
+    string random_flower_texture_bottom = get_random_flower_texture();
+
+    auto flower_top_texture = texture_loader.load(random_flower_texture_top);
+    auto flower_bottom_texture = texture_loader.load(random_flower_texture_bottom);
+
+    // Create separate materials for each flower
+    auto flower_top_material = MeshBasicMaterial::create();
+    flower_top_material->map = flower_top_texture;
+    flower_top_material->transparent = true;
+
+    auto flower_bottom_material = MeshBasicMaterial::create();
+    flower_bottom_material->map = flower_bottom_texture;
+    flower_bottom_material->transparent = true;
+
+    // Create two flower meshes (one for top, one for bottom) with independent textures
+    auto flower_geometry = PlaneGeometry::create(2.0f, 3.0f);
+    auto flower_top = Mesh::create(flower_geometry, flower_top_material);
+    auto flower_bottom = Mesh::create(flower_geometry, flower_bottom_material);
+
+    // Position the flowers
+    float pos_x = 5.0f;
 
     // Set initial positions
-    bird->position.set(0, 0, 0);
-    upper_pipe->position.set(2.0f, 3.f, 0);
-    lower_pipe->position.set(2.0f, -3.f, 0);
+    flower_top->position.set(pos_x, 3.0f, 0);
+    flower_top->rotation.z = M_PI;
+    flower_bottom->position.set(pos_x, -3.0f, 0);
 
-    // Add objects to scene
+    // Add objects to the scene
     scene.add(bird);
-    scene.add(upper_pipe);
-    scene.add(lower_pipe);
+    scene.add(flower_top);
+    scene.add(flower_bottom);
 
     // Bird movement variables
     bool move_up = false, move_down = false, move_left = false, move_right = false;
     const float speed = 0.1f;
 
-    // Add key listener
+    // Add key listener for bird movement
     ColibriKeyListener key_listener(move_up, move_down, move_left, move_right);
     canvas.addKeyListener(key_listener);
 
-    int timer = 0;
     string last_texture = bird_texture;
-
+    float speed_x = 0.05f;
     // Animation loop
     canvas.animate([&]() {
         update_texture(timer++);
 
-        // Update texture if changed
+        if (timer % 1 == 0)
+            pos_x -= speed_x;
+
+        if (timer % 10 == 0)
+            speed_x += 0.0001f;
+
+        // Apply updated position to flowers
+        flower_top->position.x = pos_x;
+        flower_bottom->position.x = pos_x;
+
+        // Update bird texture if it has changed
         if (bird_texture != last_texture) {
             current_texture = texture_loader.load(bird_texture);
             bird_material->map = current_texture;
@@ -126,28 +167,25 @@ int main() {
         if (move_left) bird->position.x -= speed;
         if (move_right) bird->position.x += speed;
 
-        // Stop bird from leaving scene
+        // Prevent bird from leaving scene bounds
         float scene_top = 3.5f;
         float scene_side = 7.0f;
-        if (bird->position.y > scene_top)
-            bird->position.y = scene_top;
-        if (bird->position.y < -scene_top)
-            bird->position.y = -scene_top;
-        if (bird->position.x > scene_side)
-            bird->position.x = scene_side;
-        if (bird->position.x < -scene_side)
-            bird->position.x = -scene_side;
+        bird->position.y = clamp(bird->position.y, -scene_top, scene_top);
+        bird->position.x = clamp(bird->position.x, -scene_side, scene_side);
 
-        // Collision detection and reset
+        // Collision detection and reset position if needed
         Box3 bird_box;
         bird_box.setFromObject(*bird.get());
-        Box3 upper_pipe_box;
-        upper_pipe_box.setFromObject(*upper_pipe.get());
-        Box3 lower_pipe_box;
-        lower_pipe_box.setFromObject(*lower_pipe.get());
+        Box3 flower_top_box;
+        flower_top_box.setFromObject(*flower_top.get());
+        flower_top_box.setFromCenterAndSize(flower_top->position, Vector3(1.0f, 1.5f, 1.0f));  // Smaller hitbox size
 
-        if (bird_box.intersectsBox(upper_pipe_box) || bird_box.intersectsBox(lower_pipe_box)) {
-            bird->position.set(0, 0, 0);  // Reset position
+        Box3 flower_bottom_box;
+        flower_bottom_box.setFromObject(*flower_bottom.get());
+        flower_bottom_box.setFromCenterAndSize(flower_bottom->position, Vector3(1.0f, 1.5f, 1.0f));  // Smaller hitbox size
+
+        if (bird_box.intersectsBox(flower_top_box) || bird_box.intersectsBox(flower_bottom_box)) {
+            bird->position.set(0, 0, 0);  // Reset bird position
         }
 
         // Render scene
