@@ -117,6 +117,14 @@ int main() {
     upper_pipe->position.set(2.0f, 3.f, 0);
     lower_pipe->position.set(2.0f, -3.f, 0);
 
+    Box3 bird_box;
+    bird_box.setFromObject(bird_material);
+
+    Box3 obstacle_box;
+    obstacle_box.setFromObject(upper_pipe_material);
+    obstacle_box.setFromObject(lower_pipe_material);
+
+
     scene.add(bird);
     scene.add(upper_pipe);
     scene.add(lower_pipe);
