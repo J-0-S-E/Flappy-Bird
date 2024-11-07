@@ -117,14 +117,6 @@ int main() {
     upper_pipe->position.set(2.0f, 3.f, 0);
     lower_pipe->position.set(2.0f, -3.f, 0);
 
-    Box3 bird_box;
-    bird_box.setFromObject(bird_material);
-
-    Box3 obstacle_box;
-    obstacle_box.setFromObject(upper_pipe_material);
-    obstacle_box.setFromObject(lower_pipe_material);
-
-
     scene.add(bird);
     scene.add(upper_pipe);
     scene.add(lower_pipe);
@@ -158,6 +150,23 @@ int main() {
         if (move_down) bird->position.y -= speed;
         if (move_left) bird->position.x -= speed;
         if (move_right) bird->position.x += speed;
+
+        // Oppdater bounding box-er
+        Box3 bird_box;
+        bird_box.setFromObject(*bird.get());
+
+        Box3 upper_pipe_box;
+        upper_pipe_box.setFromObject(*upper_pipe.get());
+
+        Box3 lower_pipe_box;
+        lower_pipe_box.setFromObject(*lower_pipe.get());
+
+        // Sjekk for kollisjon og restart
+        if (bird_box.intersectsBox(upper_pipe_box) || bird_box.intersectsBox(lower_pipe_box)) {
+            // Restart spillet ved å sette kolibrien tilbake til startposisjonen
+            bird->position.set(0, 0, 0);
+            // Eventuelt: Reset andre variabler om nødvendig
+        }
 
         // Renderer scenen
         renderer.render(scene, camera);
